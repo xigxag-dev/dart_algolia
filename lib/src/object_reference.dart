@@ -18,13 +18,22 @@ class AlgoliaObjectReference {
   /// If the object does not yet exist, it will be created.
   Future<AlgoliaObjectSnapshot> getObject() async {
     assert(_objectId != null, 'You can\'t get an object without an objectID.');
+
+    BaseOptions options = new BaseOptions(
+        connectTimeout: 3000,
+        headers: algolia._header
+      //receiveTimeout: 3000,
+    );
+
+    var dio = Dio(options);
+
     try {
       String url = '${algolia._host}indexes/$_index/$_objectId';
-      Response response = await get(
+      Response response = await dio.get(
         url,
-        headers: algolia._header,
+
       );
-      Map<String, dynamic> body = json.decode(response.body);
+      Map<String, dynamic> body = json.decode(response.data);
       return AlgoliaObjectSnapshot.fromMap(algolia, _index, body);
     } catch (err) {
       return err;
@@ -42,13 +51,21 @@ class AlgoliaObjectReference {
       if (_objectId != null) {
         url = '$url/$_objectId';
       }
-      Response response = await post(
-        url,
-        headers: algolia._header,
-        body: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
-        encoding: Encoding.getByName('utf-8'),
+      BaseOptions options = new BaseOptions(
+          connectTimeout: 3000,
+          headers: algolia._header
+        //receiveTimeout: 3000,
       );
-      Map<String, dynamic> body = json.decode(response.body);
+
+      var dio = Dio(options);
+
+      Response response = await dio.post(
+        url,
+
+        data: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
+      //  encoding: Encoding.getByName('utf-8'),
+      );
+      Map<String, dynamic> body = json.decode(response.data);
       return AlgoliaTask._(algolia, _index, body);
     } catch (err) {
       return err;
@@ -72,13 +89,21 @@ class AlgoliaObjectReference {
         url = '$url/$_objectId';
       }
       data['objectID'] = _objectId;
-      Response response = await put(
-        url,
-        headers: algolia._header,
-        body: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
-        encoding: Encoding.getByName('utf-8'),
+      BaseOptions options = new BaseOptions(
+          connectTimeout: 3000,
+          headers: algolia._header
+        //receiveTimeout: 3000,
       );
-      Map<String, dynamic> body = json.decode(response.body);
+
+      var dio = Dio(options);
+
+      Response response = await dio.put(
+        url,
+
+        data: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
+        //encoding: Encoding.getByName('utf-8'),
+      );
+      Map<String, dynamic> body = json.decode(response.data);
       return AlgoliaTask._(algolia, _index, body);
     } catch (err) {
       return err;
@@ -114,13 +139,21 @@ class AlgoliaObjectReference {
       }
       data['objectID'] = _objectId;
       data['createIfNotExists'] = createIfNotExists;
-      Response response = await put(
-        url,
-        headers: algolia._header,
-        body: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
-        encoding: Encoding.getByName('utf-8'),
+      BaseOptions options = new BaseOptions(
+          connectTimeout: 3000,
+          headers: algolia._header
+        //receiveTimeout: 3000,
       );
-      Map<String, dynamic> body = json.decode(response.body);
+
+      var dio = Dio(options);
+
+      Response response = await dio.put(
+        url,
+      //  headers: algolia._header,
+        data: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
+     //   encoding: Encoding.getByName('utf-8'),
+      );
+      Map<String, dynamic> body = json.decode(response.data);
       return AlgoliaTask._(algolia, _index, body);
     } catch (err) {
       return err;
@@ -130,7 +163,7 @@ class AlgoliaObjectReference {
   /// Delete the object referred to by this [AlgoliaObjectReference].
   ///
   /// If no object exists yet, the update will fail.
-  Future<AlgoliaTask> deleteObject() async {
+ /* Future<AlgoliaTask> deleteObject() async {
     assert(
         _objectId != null, 'You can\'t delete an object without an objectID.');
     try {
@@ -147,5 +180,5 @@ class AlgoliaObjectReference {
     } catch (err) {
       return err;
     }
-  }
+  }*/
 }

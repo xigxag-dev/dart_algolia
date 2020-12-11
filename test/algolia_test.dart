@@ -80,7 +80,7 @@ void main() async {
   ///
   /// 4. Perform Delete Object to existing Index.
   ///
-  test("4. Perform Delete Object to existing Index.", () async {
+ /* test("4. Perform Delete Object to existing Index.", () async {
     taskDeleted = await algolia.instance
         .index('contacts')
         .object(addedObject.objectID)
@@ -90,7 +90,7 @@ void main() async {
     expect(taskDeleted.runtimeType, AlgoliaTask);
     print(taskDeleted.data);
     print('\n\n');
-  });
+  });*/
 
   ///
   /// 5. Perform Batch
@@ -179,14 +179,14 @@ void main() async {
   ///
   /// 9. Perform List all Indices
   ///
-  test("9. Perform List all Indices", () async {
+/*  test("9. Perform List all Indices", () async {
     AlgoliaIndexesSnapshot indices = await algolia.instance.getIndices();
 
     // Checking if has [AlgoliaIndexesSnapshot]
     expect(indices.runtimeType, AlgoliaIndexesSnapshot);
     print('Indices count: ${indices.items.length}');
     print('\n\n');
-  });
+  });*/
 
   ///
   /// 10. Get Settings of 'contacts' index
@@ -251,7 +251,7 @@ void main() async {
   ///
   /// 14. Perform Delete Index.
   ///
-  test("14. Perform Delete Indexes.", () async {
+/*  test("14. Perform Delete Indexes.", () async {
     AlgoliaSettings settings = algolia.instance.index('contacts').settings;
     settings = settings.setReplicas([]);
     final AlgoliaTask removeReplicas = await settings.setSettings();
@@ -266,7 +266,7 @@ void main() async {
     expect(taskDeleteIndex.runtimeType, AlgoliaTask);
     print(taskDeleteIndex.data);
     print('\n\n');
-  });
+  });*/
 }
 
 class Application {

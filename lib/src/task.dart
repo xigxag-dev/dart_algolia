@@ -29,12 +29,19 @@ class AlgoliaTask {
   }
 
   Future<bool> taskStatus() async {
-    String url = '${algolia._host}indexes/$_index/task/$taskID';
-    Response response = await get(
-      url,
-      headers: algolia._header,
+    BaseOptions options = new BaseOptions(
+        connectTimeout: 3000,
+        headers: algolia._header
+      //receiveTimeout: 3000,
     );
-    Map<String, dynamic> body = json.decode(response.body);
+
+    var dio = Dio(options);
+    String url = '${algolia._host}indexes/$_index/task/$taskID';
+    Response response = await dio.get(
+      url,
+
+    );
+    Map<String, dynamic> body = json.decode(response.data);
     return body['status'] == 'published';
   }
 }

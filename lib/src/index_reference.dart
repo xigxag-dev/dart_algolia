@@ -118,13 +118,21 @@ class AlgoliaIndexReference extends AlgoliaQuery {
       final List<Map> objects = List.generate(objectIds.length,
           (int i) => {'indexName': index, 'objectID': objectIds[i]});
       final Map requests = {'requests': objects};
-      Response response = await post(
-        url,
-        headers: algolia._header,
-        body: utf8.encode(json.encode(requests, toEncodable: jsonEncodeHelper)),
-        encoding: Encoding.getByName('utf-8'),
+      BaseOptions options = new BaseOptions(
+          connectTimeout: 3000,
+          headers: algolia._header
+        //receiveTimeout: 3000,
       );
-      Map<String, dynamic> result = json.decode(response.body);
+
+      var dio = Dio(options);
+
+      Response response = await dio.post(
+        url,
+       // headers: algolia._header,
+        data: utf8.encode(json.encode(requests, toEncodable: jsonEncodeHelper)),
+      //  encoding: Encoding.getByName('utf-8'),
+      );
+      Map<String, dynamic> result = json.decode(response.data);
       List<dynamic> results = result['results'];
       return List.generate(results.length, (i) {
         return AlgoliaObjectSnapshot.fromMap(algolia, _index, results[i]);
@@ -143,12 +151,20 @@ class AlgoliaIndexReference extends AlgoliaQuery {
     assert(index != null, 'You can\'t clear an objects without an indexName.');
     try {
       String url = '${algolia._host}indexes/$index/clear';
-      Response response = await post(
-        url,
-        headers: algolia._header,
-        encoding: Encoding.getByName('utf-8'),
+      BaseOptions options = new BaseOptions(
+          connectTimeout: 3000,
+          headers: algolia._header
+        //receiveTimeout: 3000,
       );
-      Map<String, dynamic> body = json.decode(response.body);
+
+      var dio = Dio(options);
+
+      Response response = await dio.post(
+        url,
+     //   headers: algolia._header,
+      //  encoding: Encoding.getByName('utf-8'),
+      );
+      Map<String, dynamic> body = json.decode(response.data);
       return AlgoliaTask._(algolia, index, body);
     } catch (err) {
       return err;
@@ -199,13 +215,22 @@ class AlgoliaIndexReference extends AlgoliaQuery {
       if (scopes != null) {
         data['scope'] = scopes.map<String>((s) => _scopeToString(s)).toList();
       }
-      Response response = await post(
-        url,
-        headers: algolia._header,
-        encoding: Encoding.getByName('utf-8'),
-        body: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
+      BaseOptions options = new BaseOptions(
+          connectTimeout: 3000,
+          headers: algolia._header
+        //receiveTimeout: 3000,
       );
-      Map<String, dynamic> body = json.decode(response.body);
+
+      var dio = Dio(options);
+
+
+      Response response = await dio.post(
+        url,
+      //  headers: algolia._header,
+       // encoding: Encoding.getByName('utf-8'),
+        data: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
+      );
+      Map<String, dynamic> body = json.decode(response.data);
       return AlgoliaTask._(algolia, index, body);
     } catch (err) {
       return err;
@@ -252,7 +277,7 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   ///
   /// Delete the index referred to by this [AlgoliaIndexReference].
   ///
-  Future<AlgoliaTask> deleteIndex() async {
+  /*Future<AlgoliaTask> deleteIndex() async {
     assert(index != null, 'You can\'t clear an objects without an indexName.');
     try {
       String url = '${algolia._host}indexes/$index';
@@ -265,7 +290,7 @@ class AlgoliaIndexReference extends AlgoliaQuery {
     } catch (err) {
       return err;
     }
-  }
+  }*/
 }
 
 class AlgoliaMultiIndexesReference {
@@ -340,16 +365,24 @@ class AlgoliaMultiIndexesReference {
       });
     }
     String url = '${_algolia._host}indexes/*/queries';
-    Response response = await post(
+    BaseOptions options = new BaseOptions(
+        connectTimeout: 3000,
+        headers: _algolia._header
+      //receiveTimeout: 3000,
+    );
+
+    var dio = Dio(options);
+
+    Response response = await dio.post(
       url,
-      headers: _algolia._header,
-      body: utf8.encode(json.encode({
+      //headers: _algolia._header,
+      data: utf8.encode(json.encode({
         'requests': requests,
         'strategy': 'none',
       }, toEncodable: jsonEncodeHelper)),
-      encoding: Encoding.getByName('utf-8'),
+     // encoding: Encoding.getByName('utf-8'),
     );
-    Map<String, dynamic> body = json.decode(response.body);
+    Map<String, dynamic> body = json.decode(response.data);
     List<Map<String, dynamic>> results =
         (body['results'] as List).cast<Map<String, dynamic>>();
     List<AlgoliaQuerySnapshot> snapshots = <AlgoliaQuerySnapshot>[];

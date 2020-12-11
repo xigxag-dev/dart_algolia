@@ -62,14 +62,23 @@ class AlgoliaBatch {
         _committed = true;
         List<Map<String, dynamic>> actions =
             _actions.map((a) => a.toMap()).toList();
-        Response response = await post(
-          '${algolia._host}indexes/$_index/batch',
-          headers: algolia._header,
-          body: utf8.encode(json
-              .encode({'requests': actions}, toEncodable: jsonEncodeHelper)),
-          encoding: Encoding.getByName('utf-8'),
+
+        BaseOptions options = new BaseOptions(
+            connectTimeout: 3000,
+            headers: algolia._header
+          //receiveTimeout: 3000,
         );
-        Map<String, dynamic> body = json.decode(response.body);
+
+        var dio = Dio(options);
+
+        Response response = await dio.post(
+          '${algolia._host}indexes/$_index/batch',
+          //headers: algolia._header,
+          data: utf8.encode(json
+              .encode({'requests': actions}, toEncodable: jsonEncodeHelper)),
+         // encoding: Encoding.getByName('utf-8'),
+        );
+        Map<String, dynamic> body = json.decode(response.data);
         return AlgoliaTask._(algolia, _index, body);
       } else {
         throw StateError("This batch has no actions to commit.");

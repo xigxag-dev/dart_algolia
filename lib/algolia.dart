@@ -3,8 +3,12 @@ library algolia;
 import 'dart:async';
 import 'dart:convert';
 import 'package:meta/meta.dart';
-import 'package:http/http.dart';
+//import 'package:http/http.dart';
 import 'package:uuid/uuid.dart';
+import 'package:dio/dio.dart';
+import 'package:dio_http_cache/dio_http_cache.dart';
+
+
 
 part 'src/algolia.dart';
 

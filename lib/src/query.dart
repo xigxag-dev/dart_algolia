@@ -66,15 +66,36 @@ class AlgoliaQuery {
       });
     }
     String url = '${algolia._host}indexes/$_index/query';
-    Response response = await post(
-      url,
-      headers: algolia._header,
-      body:
-          utf8.encode(json.encode(_parameters, toEncodable: jsonEncodeHelper)),
-      encoding: Encoding.getByName('utf-8'),
+
+
+
+    BaseOptions options = new BaseOptions(
+      connectTimeout: 3000,
+      headers: algolia._header
+      //receiveTimeout: 3000,
     );
-    Map<String, dynamic> body = json.decode(response.body);
-    return AlgoliaQuerySnapshot.fromMap(algolia, _index, body);
+
+    var dio = Dio(options);
+    dio.interceptors.add(DioCacheManager(CacheConfig(baseUrl: url)).interceptor);
+
+    print("AG - run Query");
+   // var db = utf8.encode(json.encode(_parameters, toEncodable: jsonEncodeHelper));
+    print("AG - param $_parameters");
+    print("AG Header - ${algolia._header}");
+    print("AG url - $url");
+    Response response = await dio.post(
+      url,
+      data: _parameters,
+     options: buildCacheOptions(Duration(days: 7), maxStale: Duration(days: 10))
+     // options: Options(headers: algolia._header )// utf8.encode(json.encode(_parameters, toEncodable: jsonEncodeHelper)),
+     // encoding: Encoding.getByName('utf-8'),
+    ).catchError((onError) {
+      print("AG Error $onError");
+    });
+   // print("AG RESP- $response");
+   // Map<String, dynamic> body = json.decode(response.data);
+   // print("AG BODY - $body");
+    return AlgoliaQuerySnapshot.fromMap(algolia, _index, response.data);
   }
 
   ///

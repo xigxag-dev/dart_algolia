@@ -17,13 +17,21 @@ class AlgoliaIndexSettings extends AlgoliaSettings {
         super._(algolia, indexName);
 
   Future<Map<String, dynamic>> getSettings() async {
+    BaseOptions options = new BaseOptions(
+        connectTimeout: 3000,
+        headers: algolia._header
+      //receiveTimeout: 3000,
+    );
+
+    var dio = Dio(options);
+
     try {
       String url = '${algolia._host}indexes/$_index/settings';
-      Response response = await get(
+      Response response = await dio.get(
         url,
-        headers: algolia._header,
+
       );
-      Map<String, dynamic> body = json.decode(response.body);
+      Map<String, dynamic> body = json.decode(response.data);
       return body;
     } catch (err) {
       return err;
@@ -61,14 +69,22 @@ class AlgoliaSettings {
           _parameters.keys.isNotEmpty, 'No setting parameter to update found.');
 
       String url = '${algolia._host}indexes/$_index/settings';
-      Response response = await put(
-        url,
-        headers: algolia._header,
-        body: utf8
-            .encode(json.encode(_parameters, toEncodable: jsonEncodeHelper)),
-        encoding: Encoding.getByName('utf-8'),
+      BaseOptions options = new BaseOptions(
+          connectTimeout: 3000,
+          headers: algolia._header
+        //receiveTimeout: 3000,
       );
-      Map<String, dynamic> body = json.decode(response.body);
+
+      var dio = Dio(options);
+
+      Response response = await dio.put(
+        url,
+       // headers: algolia._header,
+        data: utf8
+            .encode(json.encode(_parameters, toEncodable: jsonEncodeHelper)),
+       // encoding: Encoding.getByName('utf-8'),
+      );
+      Map<String, dynamic> body = json.decode(response.data);
       AlgoliaTask task = AlgoliaTask._(algolia, _index, body);
       return task;
     } catch (err) {

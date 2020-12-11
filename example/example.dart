@@ -64,14 +64,14 @@ void main() async {
   ///
   /// 4. Perform Delete Object to existing Index.
   ///
-  taskDeleted = await algolia.instance
+/*  taskDeleted = await algolia.instance
       .index('contacts')
       .object(addedObject.objectID)
       .deleteObject();
 
   // Checking if has [AlgoliaTask]
   print('\n\n');
-  print(taskDeleted.data);
+  print(taskDeleted.data);*/
 
   ///
   /// 5. Perform Batch
@@ -117,11 +117,11 @@ void main() async {
   ///
   /// 7. Perform List all Indices
   ///
-  AlgoliaIndexesSnapshot indices = await algolia.instance.getIndices();
+ // AlgoliaIndexesSnapshot indices = await algolia.instance.getIndices();
 
   // Checking if has [AlgoliaIndexesSnapshot]
-  print('\n\n');
-  print('Indices count: ${indices.items.length}');
+//  print('\n\n');
+//  print('Indices count: ${indices.items.length}');
 
   ///
   /// 8. Perform Clear Index.
@@ -135,7 +135,7 @@ void main() async {
   ///
   /// 9. Perform Delete Index.
   ///
-  taskDeleteIndex = await algolia.instance.index('contact').deleteIndex();
+ // taskDeleteIndex = await algolia.instance.index('contact').deleteIndex();
 
   ///
   /// 10. Get Index Setting Instance.
