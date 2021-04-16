@@ -86,7 +86,7 @@ class AlgoliaQuery {
     Response response = await dio.post(
       url,
       data: _parameters,
-     options: buildCacheOptions(Duration(days: 2), maxStale: Duration(days: 10))
+     options: buildCacheOptions(Duration(hours: 8), maxStale: Duration(days: 10))
      // options: Options(headers: algolia._header )// utf8.encode(json.encode(_parameters, toEncodable: jsonEncodeHelper)),
      // encoding: Encoding.getByName('utf-8'),
     ).catchError((onError) {
@@ -146,7 +146,7 @@ class AlgoliaQuery {
     Response response = await dio.post(
         url,
         data: _parameters,
-        options: buildCacheOptions(Duration(days: 2), maxStale: Duration(days: 10))
+        options: buildCacheOptions(Duration(hours: 8), maxStale: Duration(days: 10))
       // options: Options(headers: algolia._header )// utf8.encode(json.encode(_parameters, toEncodable: jsonEncodeHelper)),
       // encoding: Encoding.getByName('utf-8'),
     ).catchError((onError) {
