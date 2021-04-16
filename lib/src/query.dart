@@ -90,13 +90,75 @@ class AlgoliaQuery {
      // options: Options(headers: algolia._header )// utf8.encode(json.encode(_parameters, toEncodable: jsonEncodeHelper)),
      // encoding: Encoding.getByName('utf-8'),
     ).catchError((onError) {
-      print("AG Error $onError");
+      print("AG getObjects Error $onError $_parameters");
     });
    // print("AG RESP- $response");
    // Map<String, dynamic> body = json.decode(response.data);
    // print("AG BODY - $body");
     return AlgoliaQuerySnapshot.fromMap(algolia, _index, response.data);
   }
+
+
+  ///
+  /// **BrowseObjects**
+  ///
+  /// This will execute the query and retrieve data from Algolia with [AlgoliaQuerySnapshot]
+  /// response.
+  ///
+  /// Browse has no limit in the way that query does
+  /// DO NOT USE - THIS IS NOT IMPLEMENTED FULLY DUE TO API KEY RESTRICTIONS
+  ///
+
+  Future<AlgoliaBrowseSnapshot> browseObjects({String cursor}) async {
+    if (_parameters.containsKey('minimumAroundRadius')) {
+      assert(
+      (_parameters.containsKey('aroundLatLng') ||
+          _parameters.containsKey('aroundLatLngViaIP')),
+      'This setting only works within the context of a circular geo search, enabled by `aroundLatLng` or `aroundLatLngViaIP`.');
+    }
+    if (_parameters['attributesToRetrieve'] == null) {
+      _copyWithParameters(<String, dynamic>{
+        'attributesToRetrieve': const ['*']
+      });
+    }
+
+    if(cursor.isNotEmpty){
+      _copyWithParameters(<String, dynamic>{
+        'browseFrom': cursor});
+    }
+
+    String url = '${algolia._host}indexes/$_index/browse';
+
+    BaseOptions options = new BaseOptions(
+        connectTimeout: 3000,
+        headers: algolia._header
+      //receiveTimeout: 3000,
+    );
+
+    var dio = Dio(options);
+    dio.interceptors.add(DioCacheManager(CacheConfig(baseUrl: url)).interceptor);
+
+    // print("AG - run Query");
+    // var db = utf8.encode(json.encode(_parameters, toEncodable: jsonEncodeHelper));
+    // print("AG - param $_parameters");
+    // print("AG Header - ${algolia._header}");
+    // print("AG url - $url");
+    Response response = await dio.post(
+        url,
+        data: _parameters,
+        options: buildCacheOptions(Duration(days: 2), maxStale: Duration(days: 10))
+      // options: Options(headers: algolia._header )// utf8.encode(json.encode(_parameters, toEncodable: jsonEncodeHelper)),
+      // encoding: Encoding.getByName('utf-8'),
+    ).catchError((onError) {
+      print("AG browseObjects Error $onError $_parameters");
+    });
+    // print("AG RESP- $response");
+    // Map<String, dynamic> body = json.decode(response.data);
+    // print("AG BODY - $body");
+    return AlgoliaBrowseSnapshot.fromMap(algolia, _index, response.data);
+  }
+
+
 
   ///
   /// **Search (query)**
