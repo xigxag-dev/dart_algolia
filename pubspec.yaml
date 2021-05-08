@@ -1,5 +1,6 @@
 name: algolia
 version: 0.1.7
+publish_to: none
 authors: 
   - Nayan Hathiwala (Knoxpo) <nhathiwala@knoxpo.com>
 description: >
@@ -11,13 +12,13 @@ environment:
 
 dependencies:
   meta: ^1.1.6
-  http: ^0.12.0
-  uuid: ^2.0.1
-  dio: ^3.0.3
-  dio_http_cache: ^0.2.11
-  #dio_http_cache:
-  #  git:
-  #    url: https://github.com/hurshi/dio-http-cache.git
+  http: ^0.13.0 # ^0.12.0
+  uuid: ^3.0.0
+  #dio: 4.0.0 #^3.0.3
+  #dio_http_cache: ^0.2.11
+  dio_http_cache:
+    git:
+      url: https://github.com/hurshi/dio-http-cache.git
 
 dev_dependencies:
   test: ^1.0.0
