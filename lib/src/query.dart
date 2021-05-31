@@ -47,6 +47,14 @@ class AlgoliaQuery {
   /// Obtains a AlgoliaIndex corresponding to this query's location.
   AlgoliaIndexReference reference() => AlgoliaIndexReference._(algolia, _index);
 
+
+  void clearCache(){
+    String url = '${algolia._host}indexes/$_index/query';
+    DioCacheManager(CacheConfig(baseUrl: url)).clearAll();
+    url = '${algolia._host}indexes/$_index/browse';
+    DioCacheManager(CacheConfig(baseUrl: url)).clearAll();
+  }
+
   ///
   /// **GetObjects**
   ///
