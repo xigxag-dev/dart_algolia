@@ -2,21 +2,17 @@ part of algolia;
 
 class Algolia {
   const Algolia.init({
-    @required String applicationId,
-    @required String apiKey,
+    required String applicationId,
+    required String apiKey,
     this.extraHeaders = const {},
-  })  : assert(applicationId != null, 'Application ID is required.'),
-        assert(apiKey != null, 'API Key is required.'),
-        applicationId = applicationId,
+  })  : applicationId = applicationId,
         _apiKey = apiKey;
 
   const Algolia._({
-    @required String applicationId,
-    @required String apiKey,
+    required String applicationId,
+    required String apiKey,
     this.extraHeaders = const {},
-  })  : assert(applicationId != null, 'Application ID is required.'),
-        assert(apiKey != null, 'API Key is required.'),
-        applicationId = applicationId,
+  })  : applicationId = applicationId,
         _apiKey = apiKey;
 
   final String applicationId;
@@ -26,52 +22,50 @@ class Algolia {
   Algolia get instance => Algolia._(
         applicationId: applicationId,
         apiKey: _apiKey,
-        extraHeaders: this._header,
+        extraHeaders: _header,
       );
 
-  String get _host => 'https://${this.applicationId}-dsn.algolia.net/1/';
+  String get _host => 'https://$applicationId-dsn.algolia.net/1/';
 
   Map<String, String> get _header {
-    Map<String, String> map = {
-      "X-Algolia-Application-Id": applicationId,
-      "X-Algolia-API-Key": _apiKey,
-      "Content-Type": "application/json",
+    var map = <String, String>{
+      'X-Algolia-Application-Id': applicationId,
+      'X-Algolia-API-Key': _apiKey,
+      'Content-Type': 'application/json',
     };
-    map.addEntries(this.extraHeaders.entries);
+    map.addEntries(extraHeaders.entries);
     return map;
   }
 
   Algolia setHeader(String key, String value) {
-    Map<String, String> map = this.extraHeaders;
+    var map = extraHeaders;
     map[key] = value;
     return Algolia._(
       applicationId: applicationId,
       apiKey: _apiKey,
-      extraHeaders: this._header,
+      extraHeaders: _header,
     );
   }
 
   AlgoliaIndexReference index(String index) {
-    assert(index != null);
     return AlgoliaIndexReference._(this, index);
   }
 
   AlgoliaMultiIndexesReference get multipleQueries =>
       AlgoliaMultiIndexesReference._(this);
 
-  /*Future<AlgoliaIndexesSnapshot> getIndices() async {
-    try {
-      String _url = '${this._host}indexes';
-      Response response = await get(
-        _url,
-        headers: this._header,
-      );
-      print(response);
-      Map<String, dynamic> body = json.decode(response.body);
-      print(body);
-      return AlgoliaIndexesSnapshot._(this, body);
-    } catch (err) {
-      return err;
+  Future<AlgoliaIndexesSnapshot> getIndices() async {
+    var _url = '${_host}indexes';
+    var response = await http.get(
+      Uri.parse(_url),
+      headers: _header,
+    );
+    Map<String, dynamic> body = json.decode(response.body);
+
+    if (!(response.statusCode >= 200 && response.statusCode < 300)) {
+      throw AlgoliaError._(body, response.statusCode);
     }
-  }*/
+
+    return AlgoliaIndexesSnapshot._(this, body);
+  }
 }

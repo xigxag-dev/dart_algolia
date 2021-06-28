@@ -2,45 +2,67 @@ part of algolia;
 
 class AlgoliaIndexesSnapshot {
   AlgoliaIndexesSnapshot._(this.algolia, Map<String, dynamic> map)
-      : items = (map['items'] as List<dynamic>)
+      : _map = map,
+        items = map['items'] != null
+            ? (map['items'] as List<dynamic>)
                 .map((dynamic o) {
-                  Map<String, dynamic> newMap = Map<String, dynamic>.from(o);
-                  return AlgoliaIndexSnapshot.fromMap(algolia, newMap);
+                  var newMap = Map<String, dynamic>.from(o);
+                  return AlgoliaIndexSnapshot._(algolia, newMap);
                 })
                 .toList()
-                .cast<AlgoliaIndexSnapshot>() ??
-            [],
+                .cast<AlgoliaIndexSnapshot>()
+            : [],
         nbPages = map['nbPages'] ?? 0;
 
-  List<AlgoliaIndexSnapshot> items;
-  Algolia algolia;
-  int nbPages;
+  final Algolia algolia;
+  final List<AlgoliaIndexSnapshot> items;
+  final int nbPages;
+  final Map<String, dynamic> _map;
+
+  @override
+  String toString() {
+    return _map.toString();
+  }
+
+  Map<String, dynamic> toMap() {
+    return _map;
+  }
 }
 
 class AlgoliaIndexSnapshot {
-  Algolia algolia;
-  String name;
-  DateTime createdAt;
-  DateTime updatedAt;
-  int entries;
-  int dataSize;
-  int fileSize;
-  int lastBuildTimeS;
-  int numberOfPendingTask;
-  bool pendingTask;
+  AlgoliaIndexSnapshot._(algolia, Map<String, dynamic> map)
+      : algolia = algolia,
+        _map = map,
+        name = map['name'],
+        createdAt = DateTime.parse(map['createdAt']),
+        updatedAt = DateTime.parse(map['updatedAt']),
+        entries = map['entries'],
+        dataSize = map['dataSize'],
+        fileSize = map['fileSize'],
+        lastBuildTimeS = map['lastBuildTimeS'],
+        numberOfPendingTask = map['numberOfPendingTask'],
+        pendingTask = map['pendingTask'];
 
   AlgoliaIndexReference get ref => AlgoliaIndexReference._(algolia, name);
 
-  AlgoliaIndexSnapshot.fromMap(algolia, Map<String, dynamic> map) {
-    this.algolia = algolia;
-    this.name = map['name'];
-    this.createdAt = DateTime.parse(map['createdAt']);
-    this.updatedAt = DateTime.parse(map['updatedAt']);
-    this.entries = map['entries'];
-    this.dataSize = map['dataSize'];
-    this.fileSize = map['fileSize'];
-    this.lastBuildTimeS = map['lastBuildTimeS'];
-    this.numberOfPendingTask = map['numberOfPendingTask'];
-    this.pendingTask = map['pendingTask'];
+  final Algolia algolia;
+  final String name;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final int? entries;
+  final int? dataSize;
+  final int? fileSize;
+  final int? lastBuildTimeS;
+  final int? numberOfPendingTask;
+  final bool pendingTask;
+  final Map<String, dynamic> _map;
+
+  @override
+  String toString() {
+    return _map.toString();
+  }
+
+  Map<String, dynamic> toMap() {
+    return _map;
   }
 }

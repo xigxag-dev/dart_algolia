@@ -21,24 +21,24 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   /// ID of the referenced index.
   ///
   String get index => _index;
+  String get encodedIndex => Uri.encodeFull(_index);
 
   ///
   /// **Settings**
   ///
   /// Delete the index referred to by this [AlgoliaIndexReference].
   ///
-  AlgoliaIndexSettings get settings =>
-      AlgoliaIndexSettings._(this.algolia, this._index);
+  AlgoliaIndexSettings get settings => AlgoliaIndexSettings._(algolia, _index);
 
-  AlgoliaObjectReference object([String path]) {
-    String objectId;
-    assert(index != null, 'For object reference you required indexName');
+  AlgoliaObjectReference object([String? path]) {
+    String? objectId;
     if (path == null) {
       // final String key = 'PushIdGenerator.generatePushChildName()';
       // objectId = key;
     } else {
       objectId = path;
     }
+
     return AlgoliaObjectReference._(algolia, index, objectId);
   }
 
@@ -84,7 +84,7 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   /// so that the resulting list will be chronologically-sorted.
   ///
   Future<AlgoliaTask> addObject(Map<String, dynamic> data) async {
-    final AlgoliaObjectReference newDocument = object();
+    final newDocument = object();
     return await newDocument.setData(data);
   }
 
@@ -98,7 +98,7 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   /// so that the resulting list will be chronologically-sorted.
   ///
   Future<AlgoliaTask> addObjects(List<Map<String, dynamic>> objects) async {
-    final AlgoliaBatch batch = this.batch();
+    final batch = this.batch();
     for (final obj in objects) {
       batch.addObject(obj);
     }
@@ -111,35 +111,26 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   /// Retrieve objects from the index referred to by this [AlgoliaIndexReference].
   ///
   Future<List<AlgoliaObjectSnapshot>> getObjectsByIds(
-      [List<String> objectIds]) async {
-    assert(index != null, 'You can\'t get objects without an indexName.');
-    try {
-      String url = '${algolia._host}indexes/*/objects';
-      final List<Map> objects = List.generate(objectIds.length,
-          (int i) => {'indexName': index, 'objectID': objectIds[i]});
-      final Map requests = {'requests': objects};
-      BaseOptions options = new BaseOptions(
-          connectTimeout: 3000,
-          headers: algolia._header
-        //receiveTimeout: 3000,
-      );
+      [List<String> objectIds = const []]) async {
+    var url = '${algolia._host}indexes/*/objects';
+    final objects = List<Map>.generate(objectIds.length,
+        (int i) => {'indexName': index, 'objectID': objectIds[i]});
+    final requests = {'requests': objects};
+    var response = await http.post(
+      Uri.parse(url),
+      headers: algolia._header,
+      body: utf8.encode(json.encode(requests, toEncodable: jsonEncodeHelper)),
+      encoding: Encoding.getByName('utf-8'),
+    );
+    Map<String, dynamic> body = json.decode(response.body);
 
-      var dio = Dio(options);
-
-      Response response = await dio.post(
-        url,
-       // headers: algolia._header,
-        data: utf8.encode(json.encode(requests, toEncodable: jsonEncodeHelper)),
-      //  encoding: Encoding.getByName('utf-8'),
-      );
-      Map<String, dynamic> result = json.decode(response.data);
-      List<dynamic> results = result['results'];
-      return List.generate(results.length, (i) {
-        return AlgoliaObjectSnapshot.fromMap(algolia, _index, results[i]);
-      });
-    } catch (err) {
-      return err;
+    if (!(response.statusCode >= 200 && response.statusCode < 300)) {
+      throw AlgoliaError._(body, response.statusCode);
     }
+    List<dynamic> results = body['results'];
+    return List.generate(results.length, (i) {
+      return AlgoliaObjectSnapshot._(algolia, _index, results[i]);
+    });
   }
 
   ///
@@ -148,27 +139,18 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   /// Clear the index referred to by this [AlgoliaIndexReference].
   ///
   Future<AlgoliaTask> clearIndex() async {
-    assert(index != null, 'You can\'t clear an objects without an indexName.');
-    try {
-      String url = '${algolia._host}indexes/$index/clear';
-      BaseOptions options = new BaseOptions(
-          connectTimeout: 3000,
-          headers: algolia._header
-        //receiveTimeout: 3000,
-      );
+    var url = '${algolia._host}indexes/$encodedIndex/clear';
+    var response = await http.post(
+      Uri.parse(url),
+      headers: algolia._header,
+      encoding: Encoding.getByName('utf-8'),
+    );
+    Map<String, dynamic> body = json.decode(response.body);
 
-      var dio = Dio(options);
-
-      Response response = await dio.post(
-        url,
-     //   headers: algolia._header,
-      //  encoding: Encoding.getByName('utf-8'),
-      );
-      Map<String, dynamic> body = json.decode(response.data);
-      return AlgoliaTask._(algolia, index, body);
-    } catch (err) {
-      return err;
+    if (!(response.statusCode >= 200 && response.statusCode < 300)) {
+      throw AlgoliaError._(body, response.statusCode);
     }
+    return AlgoliaTask._(algolia, index, body);
   }
 
   ///
@@ -176,7 +158,7 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   ///
   /// Move the index referred to by this [AlgoliaIndexReference].
   ///
-  Future<AlgoliaTask> moveIndex({@required String destination}) async {
+  Future<AlgoliaTask> moveIndex({required String destination}) async {
     return await _copyOrMoveIndex(destination: destination, copy: false);
   }
 
@@ -190,51 +172,37 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   /// use the scopes parameter, you will no longer be copying records (objects)
   /// but only the specified scopes.
   Future<AlgoliaTask> copyIndex(
-      {@required String destination, List<CopyScope> scopes}) async {
+      {required String destination, List<CopyScope>? scopes}) async {
     return await _copyOrMoveIndex(
         destination: destination, copy: true, scopes: scopes);
   }
 
   Future<AlgoliaTask> _copyOrMoveIndex({
-    @required String destination,
-    @required bool copy,
-    List<CopyScope> scopes,
+    required String destination,
+    required bool copy,
+    List<CopyScope>? scopes,
   }) async {
-    assert(index != null,
-        'You can\'t copy or move an index without an indexName.');
-    assert(destination != null,
-        'You can\'t copy or move an index without a destination.');
-    assert(copy != null,
-        'You can\'t copy or move an index without selecting which operation.');
-    try {
-      String url = '${algolia._host}indexes/$index/operation';
-      final Map<String, dynamic> data = {
-        'operation': copy ? 'copy' : 'move',
-        'destination': destination,
-      };
-      if (scopes != null) {
-        data['scope'] = scopes.map<String>((s) => _scopeToString(s)).toList();
-      }
-      BaseOptions options = new BaseOptions(
-          connectTimeout: 3000,
-          headers: algolia._header
-        //receiveTimeout: 3000,
-      );
-
-      var dio = Dio(options);
-
-
-      Response response = await dio.post(
-        url,
-      //  headers: algolia._header,
-       // encoding: Encoding.getByName('utf-8'),
-        data: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
-      );
-      Map<String, dynamic> body = json.decode(response.data);
-      return AlgoliaTask._(algolia, index, body);
-    } catch (err) {
-      return err;
+    var url = '${algolia._host}indexes/$encodedIndex/operation';
+    final data = <String, dynamic>{
+      'operation': copy ? 'copy' : 'move',
+      'destination': destination,
+    };
+    if (scopes != null) {
+      data['scope'] = scopes.map<String>((s) => _scopeToString(s)).toList();
     }
+    var response = await http.post(
+      Uri.parse(url),
+      headers: algolia._header,
+      encoding: Encoding.getByName('utf-8'),
+      body: utf8.encode(json.encode(data, toEncodable: jsonEncodeHelper)),
+    );
+    Map<String, dynamic> body = json.decode(response.body);
+
+    if (!(response.statusCode >= 200 && response.statusCode < 300)) {
+      throw AlgoliaError._(body, response.statusCode);
+    }
+
+    return AlgoliaTask._(algolia, index, body);
   }
 
   String _scopeToString(CopyScope scope) {
@@ -251,25 +219,19 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   ///
   Future<AlgoliaTask> replaceAllObjects(
       List<Map<String, dynamic>> objects) async {
-    assert(
-        index != null, 'You can\'t replace all objects without an indexName.');
-    try {
-      final AlgoliaIndexReference tempIndex = algolia.index(Uuid().v4());
-      final AlgoliaTask copyTask = await copyIndex(
-        destination: tempIndex.index,
-        scopes: [
-          CopyScope.Settings,
-          CopyScope.Synonyms,
-          CopyScope.Rules,
-        ],
-      );
-      await copyTask.waitTask();
-      final AlgoliaTask batchTask = await tempIndex.addObjects(objects);
-      await batchTask.waitTask();
-      return await tempIndex.moveIndex(destination: index);
-    } catch (err) {
-      return err;
-    }
+    final tempIndex = algolia.index(Uuid().v4());
+    final copyTask = await copyIndex(
+      destination: tempIndex.index,
+      scopes: [
+        CopyScope.Settings,
+        CopyScope.Synonyms,
+        CopyScope.Rules,
+      ],
+    );
+    await copyTask.waitTask();
+    final batchTask = await tempIndex.addObjects(objects);
+    await batchTask.waitTask();
+    return await tempIndex.moveIndex(destination: index);
   }
 
   ///
@@ -277,77 +239,76 @@ class AlgoliaIndexReference extends AlgoliaQuery {
   ///
   /// Delete the index referred to by this [AlgoliaIndexReference].
   ///
-  /*Future<AlgoliaTask> deleteIndex() async {
-    assert(index != null, 'You can\'t clear an objects without an indexName.');
-    try {
-      String url = '${algolia._host}indexes/$index';
-      Response response = await delete(
-        url,
-        headers: algolia._header,
-      );
-      Map<String, dynamic> body = json.decode(response.body);
-      return AlgoliaTask._(algolia, index, body);
-    } catch (err) {
-      return err;
+  Future<AlgoliaTask> deleteIndex() async {
+    var url = '${algolia._host}indexes/$encodedIndex';
+    var response = await http.delete(
+      Uri.parse(url),
+      headers: algolia._header,
+    );
+    Map<String, dynamic> body = json.decode(response.body);
+    if (!(response.statusCode >= 200 && response.statusCode < 300)) {
+      throw AlgoliaError._(body, response.statusCode);
     }
-  }*/
+    return AlgoliaTask._(algolia, index, body);
+  }
 }
 
 class AlgoliaMultiIndexesReference {
-  AlgoliaMultiIndexesReference._(Algolia algolia,
-      {List<AlgoliaQuery> queries}) {
+  AlgoliaMultiIndexesReference._(Algolia? algolia,
+      {List<AlgoliaQuery>? queries}) {
     _algolia = algolia;
     if (queries != null) {
-      this._queries = queries;
+      _queries = queries;
     } else {
-      this._queries = [];
+      _queries = [];
     }
   }
 
-  List<AlgoliaQuery> _queries;
-  Algolia _algolia;
+  List<AlgoliaQuery>? _queries;
+  Algolia? _algolia;
 
-  List<AlgoliaQuery> get queries => this._queries;
+  List<AlgoliaQuery>? get queries => _queries;
 
   AlgoliaMultiIndexesReference addQuery(AlgoliaQuery query) {
+    // ignore: unnecessary_null_comparison
     assert(query != null);
-    _queries.add(query);
+    _queries!.add(query);
     return AlgoliaMultiIndexesReference._(
-      this._algolia,
+      _algolia,
       queries: _queries,
     );
   }
 
   AlgoliaMultiIndexesReference addQueries(List<AlgoliaQuery> queries) {
-    assert(queries != null && queries.isNotEmpty);
-    _queries.addAll(queries);
+    assert(queries.isNotEmpty);
+    _queries!.addAll(queries);
     return AlgoliaMultiIndexesReference._(
-      this._algolia,
+      _algolia,
       queries: _queries,
     );
   }
 
   AlgoliaMultiIndexesReference clearQueries() => AlgoliaMultiIndexesReference._(
-        this._algolia,
+        _algolia,
         queries: [],
       );
 
   String _encodeMap(Map data) {
-    Uri outgoingUri = new Uri(
+    var outgoingUri = Uri(
       scheme: '',
       host: '',
       path: '',
-      queryParameters: data,
+      queryParameters: data as Map<String, dynamic>?,
     );
     return outgoingUri.toString().substring(3);
   }
 
   Future<List<AlgoliaQuerySnapshot>> getObjects() async {
-    assert(queries != null && _queries.isNotEmpty,
+    assert(queries != null && _queries!.isNotEmpty,
         'You require at least one query added before performing `.getObject()`');
-    List<Map<String, dynamic>> requests = [];
-    for (AlgoliaQuery q in this._queries) {
-      AlgoliaQuery _q = q;
+    var requests = <Map<String, dynamic>>[];
+    for (var q in _queries!) {
+      var _q = q;
       if (_q.parameters.containsKey('minimumAroundRadius')) {
         assert(
             (_q.parameters.containsKey('aroundLatLng') ||
@@ -364,32 +325,27 @@ class AlgoliaMultiIndexesReference {
         'params': _encodeMap(q.parameters),
       });
     }
-    String url = '${_algolia._host}indexes/*/queries';
-    BaseOptions options = new BaseOptions(
-        connectTimeout: 3000,
-        headers: _algolia._header
-      //receiveTimeout: 3000,
-    );
-
-    var dio = Dio(options);
-
-    Response response = await dio.post(
-      url,
-      //headers: _algolia._header,
-      data: utf8.encode(json.encode({
+    var url = '${_algolia!._host}indexes/*/queries';
+    var response = await http.post(
+      Uri.parse(url),
+      headers: _algolia!._header,
+      body: utf8.encode(json.encode({
         'requests': requests,
         'strategy': 'none',
       }, toEncodable: jsonEncodeHelper)),
-     // encoding: Encoding.getByName('utf-8'),
+      encoding: Encoding.getByName('utf-8'),
     );
-    Map<String, dynamic> body = json.decode(response.data);
-    List<Map<String, dynamic>> results =
-        (body['results'] as List).cast<Map<String, dynamic>>();
-    List<AlgoliaQuerySnapshot> snapshots = <AlgoliaQuerySnapshot>[];
+    Map<String, dynamic> body = json.decode(response.body);
+
+    if (!(response.statusCode >= 200 && response.statusCode < 300)) {
+      throw AlgoliaError._(body, response.statusCode);
+    }
+
+    var results = (body['results'] as List).cast<Map<String, dynamic>>();
+    var snapshots = <AlgoliaQuerySnapshot>[];
     if (results.isNotEmpty) {
-      for (Map<String, dynamic> snap in results) {
-        snapshots
-            .add(AlgoliaQuerySnapshot.fromMap(_algolia, snap['index'], snap));
+      for (var snap in results) {
+        snapshots.add(AlgoliaQuerySnapshot._(_algolia, snap['index'], snap));
       }
     }
     return snapshots;
