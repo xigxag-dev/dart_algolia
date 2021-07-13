@@ -79,6 +79,7 @@ class AlgoliaBrowseSnapshot {
         facets = map['facets'] ?? {},
         cursor =  map['cursor'] ?? '',
         facetsStats = map['facets_stats'] ?? {};
+  //Fix null issues
 
   final List<AlgoliaObjectSnapshot> hits;
   final Algolia algolia;
